@@ -15,20 +15,40 @@ AutoBridge creates a coarse-grained floorplan of the design to balance utilizati
 
 > **Note:** AutoBridge is from 2021. We recommend interested users to try Rapidstream, the latest optimized version and free for academic use.
 
-## Folder Structure of Each Benchmark
+
+## Example Tcl to Import RTL to Vivado
+
+```
+proc import_ips_from_dir {dir} {
+    # Get a list of all .xci files in the specified directory and its subdirectories
+    foreach file [glob -nocomplain -directory $dir *] {
+        if {[file isdirectory $file]} {
+            set ip_file [glob -nocomplain -directory $file *.xci]
+            puts "Importing IP: $ip_file"
+            import_ip $ip_file
+        }
+    }
+}
+
+import_ips_from_dir <rtl_folder>
+import_files <rtl_folder>
+```
+
+## Directory Tree of Each Benchmark
 
 ```
 root
 └── benchmark
     └── configuration
+        ├── tapa_src  # TAPA HLS
         ├── rtl
         ├── rtl_pipelined
-        └── constraint.tcl
+        └── constraint.tcl  # coarse-grained placement
 ```
 
 ## Systolic-array Matrix-multiply (mm) Accelerators
 
-Generated using [AutoSA](https://github.com/UCLA-VAST/AutoSA). The targeted device is `xcvp1802-lsvc4072-2MP-e-S` (VPK180 board). The target HLS frequency is 300 MHz. The top-level module is `kernel0`. We vary the systolic array width and height. The configurations include:
+Generated using [AutoSA](https://github.com/UCLA-VAST/AutoSA). The targeted device is `xcvp1802-lsvc4072-2MP-e-S` (VPK180 board). The target HLS frequency is 300 MHz. The top-level module is `kernel0`. We vary the systolic array width and height. The four configurations are:
 - 18x16
 - 18x17
 - 18x18
@@ -52,6 +72,55 @@ Change `array_part[0]` and `array_part[1]` to vary the width and height respecti
 --hls
 ```
 
+
+## Stencil (jacobi3d) Accelerators
+
+Generated using [SODA](https://github.com/UCLA-VAST/soda). The targeted device is `xcvp1802-lsvc4072-2MP-e-S` (VPK180 board). The target HLS frequency is 300 MHz. The top-level module is `jacobi3d_kernel`. We vary the number of iterations to compute jacobi3d. The four configurations are:
+- iter109
+- iter115
+- iter121
+- iter124
+
+The jacobi3d application has thin connections between operations with only 512 bits. Therefore, the frequency difference between the baseline RTL and the pipelined version is minimal.
+
+### Example SODA Command
+
+`sodac tests/src/jacobi3d.soda --xocl-kernel src/jacobi3d.cpp --xocl-interface tapa::mmap --frt-host src/jacobi3d_soda.host.cpp`
+
+Example `jacobi3d.soda` configuration:
+```sh
+kernel: jacobi3d
+burst width: 512
+unroll factor: 16
+input dram 0 float: t1(16, 16, *)
+output dram 1 float: t0(0, 0, 0) = (t1(0, 0, 0)
+    + t1(1, 0, 0) + t1(-1,  0,  0)
+    + t1(0, 1, 0) + t1( 0, -1,  0)
+    + t1(0, 0, 1) + t1( 0,  0, -1)
+    ) * 0.142857142f
+iterate: 50
+border: ignore
+cluster: coarse
+```
+
+
+## KNN (knn) Accelerators
+
+Generated using [CHIP-KNN](https://github.com/SFU-HiAccel/CHIP-KNN). The targeted device is `xcvh1582-vsva3697-2MP-e-S` (VHK158 board). The target HLS frequency is 300 MHz. The top-level module is `Knn`. We vary the number of HBM ports manually. The four configurations are:
+- knn27
+- knn36
+- knn45
+- knn54
+
+
+## Sparse Matrix-vector Multiplication (spmv) Accelerators
+
+Generated using [Serpens](https://github.com/UCLA-VAST/Serpens). The targeted device is `xcvh1582-vsva3697-2MP-e-S` (VHK158 board). The target HLS frequency is 300 MHz. The top-level module is `jacobi3d_kernel`. We vary the number of HBM ports manually in `serpens.h` (`constexpr int NUM_CH_SPARSE = 56; //or, 32, 40, 48, 56
+`). The four configurations are:
+- serpens32
+- serpens40
+- serpens48
+- serpens56
 
 
 
