@@ -115,7 +115,7 @@ Generated using [CHIP-KNN](https://github.com/SFU-HiAccel/CHIP-KNN). The targete
 
 ## Sparse Matrix-vector Multiplication (spmv) Accelerators
 
-Generated using [Serpens](https://github.com/UCLA-VAST/Serpens). The targeted device is `xcvh1582-vsva3697-2MP-e-S` (VHK158 board). The target HLS frequency is 300 MHz. The top-level module is `jacobi3d_kernel`. We vary the number of HBM ports manually in `serpens.h` (`constexpr int NUM_CH_SPARSE = 56; //or, 32, 40, 48, 56
+Generated using [Serpens](https://github.com/UCLA-VAST/Serpens). The targeted device is `xcvh1582-vsva3697-2MP-e-S` (VHK158 board). The target HLS frequency is 300 MHz. The top-level module is `Serpens`. We vary the number of HBM ports manually in `serpens.h` (`constexpr int NUM_CH_SPARSE = 56; //or, 32, 40, 48, 56
 `). The four configurations are:
 - serpens32
 - serpens40
